@@ -133,10 +133,10 @@ fun ResearchSessionCard(session: ResearchSession, onTap: () -> Unit, onDelete: (
                 Text(session.query, fontWeight = FontWeight.SemiBold, maxLines = 2)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     StatusChip(session.status, statusColor)
-                    if (session.sources_count > 0)
-                        Text("${session.sources_count} sources", fontSize = 11.sp,
+                    if (session.source_count > 0)
+                        Text("${session.source_count} sources", fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurface.copy(0.5f))
-                    Text(session.created_at.take(10), fontSize = 11.sp,
+                    Text(java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date((session.started_at * 1000).toLong())), fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(0.5f))
                 }
             }

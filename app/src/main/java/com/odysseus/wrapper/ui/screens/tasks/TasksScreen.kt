@@ -125,7 +125,7 @@ fun TaskCard(
                         else      -> task.trigger_type
                     }
                     StatusChip(schedText,
-                        if (task.paused) MaterialTheme.colorScheme.outline
+                        if (task.status == "paused") MaterialTheme.colorScheme.outline
                         else MaterialTheme.colorScheme.primary)
                     StatusChip(task.task_type, MaterialTheme.colorScheme.secondary)
                 }
@@ -138,9 +138,9 @@ fun TaskCard(
             Box {
                 IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, null) }
                 DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                    DropdownMenuItem(text = { Text(if (task.paused) "Resume" else "Pause") },
-                        onClick = { if (task.paused) onResume() else onPause(); showMenu = false },
-                        leadingIcon = { Icon(if (task.paused) Icons.Default.PlayArrow else Icons.Default.Pause, null) })
+                    DropdownMenuItem(text = { Text(if (task.status == "paused") "Resume" else "Pause") },
+                        onClick = { if (task.status == "paused") onResume() else onPause(); showMenu = false },
+                        leadingIcon = { Icon(if (task.status == "paused") Icons.Default.PlayArrow else Icons.Default.Pause, null) })
                     DropdownMenuItem(text = { Text("View Runs") },
                         onClick = { onViewRuns(); showMenu = false },
                         leadingIcon = { Icon(Icons.Default.History, null) })

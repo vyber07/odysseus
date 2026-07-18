@@ -28,6 +28,7 @@ class NotesViewModel(app: Application) : AndroidViewModel(app) {
     fun load(archived: Boolean = false) = viewModelScope.launch {
         _loading.value = true
         val type = if (_filter.value == "all") null else _filter.value
+        // list() already unwraps {"notes":[...]} → List<NoteItem>
         repo.list(type, archived).fold(
             onSuccess = { _notes.value = it },
             onFailure = { _error.value = it.message }
@@ -45,7 +46,7 @@ class NotesViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
-    fun createTodo(title: String, items: List<NoteItem_CheckItem>) = viewModelScope.launch {
+    fun createTodo(title: String, items: List<NoteCheckItem>) = viewModelScope.launch {
         repo.create(NoteCreateRequest(title = title, items = items, note_type = "todo")).fold(
             onSuccess = { _notes.value = listOf(it) + _notes.value },
             onFailure = { _error.value = it.message }

@@ -12,7 +12,7 @@ data class AuthStatusResponse(val authenticated: Boolean, val username: String? 
 data class ChangePasswordRequest(val current_password: String, val new_password: String)
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SESSIONS / CHAT
+// SESSIONS / CHAT  — /api/sessions returns [...] directly
 // ═══════════════════════════════════════════════════════════════════════════════
 
 data class SessionItem(
@@ -22,9 +22,32 @@ data class SessionItem(
     val endpoint_url: String = "",
     val rag: Boolean = false,
     val archived: Boolean = false,
-    val created_at: Long = 0,
-    val updated_at: Long = 0,
+    val folder: String? = null,
+    val total_tokens: Int = 0,
+    val is_important: Boolean = false,
+    val created_at: String = "",
+    val updated_at: String = "",
+    val last_message_at: String? = null,
+    val has_documents: Boolean = false,
+    val has_images: Boolean = false,
+    val mode: String = "agent",
     val message_count: Int = 0
+)
+
+// /api/history/{id} returns {"history": [...]}
+data class HistoryResponse(val history: List<MessageItem> = emptyList())
+
+data class MessageItem(
+    val role: String = "",        // "user" | "assistant"
+    val content: String = "",
+    val metadata: MessageMetadata? = null
+)
+
+data class MessageMetadata(
+    val model: String? = null,
+    val input_tokens: Int? = null,
+    val output_tokens: Int? = null,
+    val response_time: Double? = null
 )
 
 data class ChatRequest(
@@ -34,46 +57,41 @@ data class ChatRequest(
     val use_research: Boolean = false,
     val attachments: List<String> = emptyList()
 )
-
 data class ChatResponse(val response: String)
 
-data class MessageItem(
-    val id: Int = 0,
-    val role: String = "",       // "user" | "assistant"
-    val content: String = "",
-    val created_at: Long = 0,
-    val model: String? = null,
-    val attachments: List<AttachmentRef>? = null
+// /api/models returns {"hosts":[], "items":[...]}
+data class ModelsResponse(
+    val hosts: List<Any> = emptyList(),
+    val items: List<ModelEndpointGroup> = emptyList()
+)
+data class ModelEndpointGroup(
+    val host: String = "",
+    val url: String = "",
+    val models: List<String> = emptyList()
 )
 
-data class AttachmentRef(val id: String, val name: String, val mime: String)
-
-data class ModelItem(
-    val id: String,
-    val name: String = "",
-    val provider: String = "",
-    val endpoint_url: String = ""
-)
-
+// /api/model-endpoints returns [...] directly
 data class EndpointItem(
-    val id: String,
-    val label: String = "",
+    val id: String = "",
+    val name: String = "",
     val base_url: String = "",
-    val model: String = "",
-    val is_local: Boolean = false,
-    val is_default: Boolean = false
+    val has_key: Boolean = false,
+    val is_enabled: Boolean = true,
+    val models: List<String> = emptyList()
 )
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// NOTES
+// NOTES — /api/notes returns {"notes": [...]}
 // ═══════════════════════════════════════════════════════════════════════════════
+
+data class NotesResponse(val notes: List<NoteItem> = emptyList())
 
 data class NoteItem(
     val id: Int = 0,
     val title: String = "",
     val content: String? = null,
-    val items: List<NoteItem_CheckItem>? = null,
-    val note_type: String = "note",   // "note" | "todo" | "reminder"
+    val items: List<NoteCheckItem>? = null,
+    val note_type: String = "note",
     val color: String? = null,
     val label: String? = null,
     val pinned: Boolean = false,
@@ -84,15 +102,12 @@ data class NoteItem(
     val updated_at: String = ""
 )
 
-data class NoteItem_CheckItem(
-    val text: String = "",
-    val done: Boolean = false
-)
+data class NoteCheckItem(val text: String = "", val done: Boolean = false)
 
 data class NoteCreateRequest(
     val title: String = "",
     val content: String? = null,
-    val items: List<NoteItem_CheckItem>? = null,
+    val items: List<NoteCheckItem>? = null,
     val note_type: String = "note",
     val color: String? = null,
     val pinned: Boolean = false,
@@ -102,7 +117,7 @@ data class NoteCreateRequest(
 data class NoteUpdateRequest(
     val title: String? = null,
     val content: String? = null,
-    val items: List<NoteItem_CheckItem>? = null,
+    val items: List<NoteCheckItem>? = null,
     val note_type: String? = null,
     val color: String? = null,
     val pinned: Boolean? = null,
@@ -111,8 +126,10 @@ data class NoteUpdateRequest(
 )
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TASKS (Scheduled)
+// TASKS — /api/tasks returns {"tasks": [...]}
 // ═══════════════════════════════════════════════════════════════════════════════
+
+data class TasksResponse(val tasks: List<TaskItem> = emptyList())
 
 data class TaskItem(
     val id: String = "",
@@ -121,7 +138,7 @@ data class TaskItem(
     val task_type: String = "llm",
     val action: String? = null,
     val schedule: String? = null,
-    val scheduled_time: String = "09:00",
+    val scheduled_time: String? = null,
     val scheduled_day: Int? = null,
     val scheduled_date: String? = null,
     val cron_expression: String? = null,
@@ -130,10 +147,10 @@ data class TaskItem(
     val output_target: String = "session",
     val model: String? = null,
     val endpoint_url: String? = null,
-    val paused: Boolean = false,
+    val status: String = "active",
     val last_run: String? = null,
-    val last_run_status: String? = null,
-    val notifications_enabled: Boolean? = null
+    val run_count: Int = 0,
+    val notifications_enabled: Boolean = false
 )
 
 data class TaskCreateRequest(
@@ -157,7 +174,6 @@ data class TaskUpdateRequest(
     val prompt: String? = null,
     val schedule: String? = null,
     val scheduled_time: String? = null,
-    val paused: Boolean? = null,
     val model: String? = null
 )
 
@@ -172,14 +188,16 @@ data class TaskRun(
 )
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CALENDAR
+// CALENDAR — /api/calendar/calendars returns {"calendars": [...]}
+//            /api/calendar/events requires ?start=&end= query params
 // ═══════════════════════════════════════════════════════════════════════════════
 
+data class CalendarsResponse(val calendars: List<CalendarItem> = emptyList())
+
 data class CalendarItem(
-    val id: String = "",
+    val href: String = "",
     val name: String = "",
     val color: String? = null,
-    val is_default: Boolean = false,
     val source: String = "local"
 )
 
@@ -193,7 +211,7 @@ data class CalendarEvent(
     val location: String = "",
     val rrule: String? = null,
     val color: String? = null,
-    val calendar_id: String? = null,
+    val calendar_href: String? = null,
     val calendar_name: String? = null
 )
 
@@ -269,7 +287,7 @@ data class SendEmailRequest(
     val reply_to_uid: String? = null
 )
 
-data class EmailFolder(val name: String, val full_name: String, val unread_count: Int = 0)
+data class EmailFolder(val name: String = "", val full_name: String = "", val unread_count: Int = 0)
 
 data class EmailAccountItem(
     val id: Int = 0,
@@ -281,8 +299,13 @@ data class EmailAccountItem(
 )
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// DOCUMENTS
+// DOCUMENTS — /api/documents/library returns {"documents": [...], "total": N}
 // ═══════════════════════════════════════════════════════════════════════════════
+
+data class DocumentsLibraryResponse(
+    val documents: List<DocumentItem> = emptyList(),
+    val total: Int = 0
+)
 
 data class DocumentItem(
     val id: String = "",
@@ -304,16 +327,8 @@ data class DocumentDetail(
     val updated_at: String = ""
 )
 
-data class DocumentCreateRequest(
-    val title: String,
-    val content: String = "",
-    val content_type: String = "markdown"
-)
-
-data class DocumentUpdateRequest(
-    val title: String? = null,
-    val content: String? = null
-)
+data class DocumentCreateRequest(val title: String, val content: String = "", val content_type: String = "markdown")
+data class DocumentUpdateRequest(val title: String? = null, val content: String? = null)
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // GALLERY
@@ -349,24 +364,25 @@ data class GalleryStats(
 )
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// RESEARCH
+// RESEARCH — /api/research/library returns {"research": [...]}
 // ═══════════════════════════════════════════════════════════════════════════════
 
-data class ResearchStartRequest(
-    val query: String,
-    val max_sources: Int = 10,
-    val mode: String = "standard"
-)
+data class ResearchLibraryResponse(val research: List<ResearchSession> = emptyList())
 
 data class ResearchSession(
     val id: String = "",
     val query: String = "",
-    val status: String = "",      // "running" | "done" | "error" | "cancelled"
-    val created_at: String = "",
-    val completed_at: String? = null,
-    val sources_count: Int = 0,
-    val is_archived: Boolean = false
+    val status: String = "",
+    val category: String = "",
+    val source_count: Int = 0,
+    val rounds: Int = 0,
+    val started_at: Double = 0.0,
+    val completed_at: Double? = null,
+    val archived: Boolean = false,
+    val thumbnail: String? = null
 )
+
+data class ResearchStartRequest(val query: String, val max_sources: Int = 10, val mode: String = "standard")
 
 data class ResearchStatus(
     val session_id: String = "",
@@ -384,15 +400,14 @@ data class ResearchReport(
     val created_at: String = ""
 )
 
-data class ResearchSource(
-    val url: String = "",
-    val title: String = "",
-    val snippet: String = ""
-)
+data class ResearchSource(val url: String = "", val title: String = "", val snippet: String = "")
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// MEMORY
+// MEMORY — /api/memory returns {"memory": [...]}
+//          /api/skills returns {"skills": [...], "count": N}
 // ═══════════════════════════════════════════════════════════════════════════════
+
+data class MemoryListResponse(val memory: List<MemoryItem> = emptyList())
 
 data class MemoryItem(
     val id: String = "",
@@ -404,16 +419,10 @@ data class MemoryItem(
     val pinned: Boolean = false
 )
 
-data class MemoryAddRequest(
-    val text: String,
-    val category: String = "fact",
-    val source: String = "user"
-)
+data class MemoryAddRequest(val text: String, val category: String = "fact", val source: String = "user")
+data class MemoryUpdateRequest(val text: String, val category: String? = null)
 
-data class MemoryUpdateRequest(
-    val text: String,
-    val category: String? = null
-)
+data class SkillsResponse(val skills: List<SkillItem> = emptyList(), val count: Int = 0)
 
 data class SkillItem(
     val id: String = "",
@@ -431,10 +440,4 @@ data class SkillItem(
 
 data class GenericResponse(val ok: Boolean = true, val message: String? = null)
 data class IdResponse(val id: String)
-data class UploadResponse(
-    val id: String,
-    val name: String,
-    val mime: String,
-    val size: Int,
-    val url: String? = null
-)
+data class UploadResponse(val id: String, val name: String, val mime: String, val size: Int, val url: String? = null)
