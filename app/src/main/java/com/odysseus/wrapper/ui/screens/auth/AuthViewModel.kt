@@ -64,8 +64,15 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         NetworkClient.baseUrl = clean
     }
 
-    fun completeFirstRun(url: String) = viewModelScope.launch {
+    fun setBearerToken(token: String) = viewModelScope.launch {
+        val t = token.trim()
+        prefs.setBearerToken(t)
+        NetworkClient.bearerToken = t
+    }
+
+    fun completeFirstRun(url: String, token: String = "") = viewModelScope.launch {
         setServerUrl(url)
+        if (token.isNotBlank()) setBearerToken(token)
         prefs.setFirstRunDone(true)
     }
 

@@ -54,6 +54,8 @@ class MainActivity : ComponentActivity() {
         val prefs = UserPreferences(this)
         val savedUrl = runBlocking { prefs.serverUrl.first() }
         if (savedUrl.isNotEmpty()) NetworkClient.baseUrl = savedUrl
+        val savedToken = runBlocking { prefs.bearerToken.first() }
+        if (savedToken.isNotEmpty()) NetworkClient.bearerToken = savedToken
         setContent {
             val authVm: AuthViewModel = viewModel()
             val darkMode by authVm.darkMode.collectAsStateWithLifecycle()

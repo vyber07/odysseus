@@ -29,6 +29,7 @@ fun FirstRunScreen(onDone: () -> Unit, vm: AuthViewModel = viewModel()) {
     val focus = LocalFocusManager.current
 
     var serverUrl   by remember { mutableStateOf("http://") }
+    var apiToken    by remember { mutableStateOf("") }
     var testing     by remember { mutableStateOf(false) }
     var testResult  by remember { mutableStateOf<String?>(null) }
     var testSuccess by remember { mutableStateOf(false) }
@@ -184,11 +185,45 @@ fun FirstRunScreen(onDone: () -> Unit, vm: AuthViewModel = viewModel()) {
 
         Spacer(Modifier.height(32.dp))
 
-        // Continue button — only active after successful test
+        Spacer(Modifier.height(24.dp))
+
+        // ── Optional: paste mobile token from webapp settings ─────────────────
+        Card(colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface),
+            modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Mobile App Token (optional)", fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "In the Odysseus webapp go to Settings → Mobile App, " +
+                    "generate a token and paste it here. The app will use it " +
+                    "so you don't need to enter your password each time.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+                OutlinedTextField(
+                    value         = apiToken,
+                    onValueChange = { apiToken = it.trim() },
+                    label         = { Text("Paste token (ody_…)") },
+                    placeholder   = { Text("ody_xxxxxxxxxxxxxxxxxxxx") },
+                    singleLine    = true,
+                    modifier      = Modifier.fillMaxWidth(),
+                    leadingIcon   = { Icon(Icons.Default.Key, null) },
+                    isError       = apiToken.isNotBlank() && !apiToken.startsWith("ody_")
+                )
+                if (apiToken.isNotBlank() && !apiToken.startsWith("ody_")) {
+                    Text("Token should start with ody_", fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        // Continue button
         Button(
             onClick = {
                 val url = serverUrl.trim().let { if (!it.endsWith("/")) "$it/" else it }
-                vm.completeFirstRun(url)
+                vm.completeFirstRun(url, apiToken.trim())
                 onDone()
             },
             modifier = Modifier.fillMaxWidth().height(52.dp),
