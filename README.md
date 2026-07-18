@@ -47,7 +47,7 @@ Open in Android Studio → wait for Gradle sync → **Run ▶** on your device o
 
 On first launch you will see the **Server Setup** screen:
 
-1. Enter your Odysseus server URL — e.g. `http://3.7.253.176/` (your EC2 public IP)
+1. Enter your Odysseus server URL — e.g. `http://YOUR_EC2_PUBLIC_IP/`
 2. Tap **Test Connection** to verify the server is reachable
 3. Tap **Continue to Login**
 4. Login with your Odysseus username and password
