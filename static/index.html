@@ -1967,9 +1967,15 @@
 
         <!-- ═══ MOBILE APP TAB ═══ -->
         <div data-settings-panel="mobile" class="hidden">
+          <!-- Auto-token info banner: the Android app creates a token automatically on first login -->
+          <div class="admin-card" style="border-left:3px solid var(--color-success,#4caf50);">
+            <h2><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;opacity:0.6"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Auto-connect on first login</h2>
+            <div class="admin-toggle-sub">The Odysseus Android app automatically creates a mobile token the first time you sign in. No manual setup needed — just open the app, enter your server URL, and log in. Your token will be ready instantly.</div>
+          </div>
+
           <div class="admin-card">
-            <h2><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;opacity:0.6"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>Connect Mobile App</h2>
-            <div class="admin-toggle-sub" style="margin-bottom:12px;">Generate a token to connect the Odysseus Android app to this server. Tokens are scoped to your account only.</div>
+            <h2><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;opacity:0.6"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>Generate Token Manually</h2>
+            <div class="admin-toggle-sub" style="margin-bottom:12px;">Need a token for a specific device name, a second device, or an external use? Generate one manually below. Tokens are scoped to your account only.</div>
             <div class="settings-row" style="align-items:center;gap:8px;margin-bottom:8px;">
               <input id="mobile-token-name" class="settings-select" style="flex:1;" placeholder="Token name (e.g. My Phone)" maxlength="80">
               <button class="admin-btn-add" id="mobile-token-generate-btn" style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
@@ -2006,9 +2012,9 @@
             <ol style="font-size:12px;line-height:1.85;opacity:0.8;margin:0;padding-left:18px;">
               <li>Install the <strong>Odysseus</strong> app on your Android device.</li>
               <li>Open the app → tap <strong>Connect to server</strong>.</li>
-              <li>Enter server URL: <code id="mobile-server-url-hint" style="font-size:11px;background:rgba(0,0,0,0.1);padding:1px 5px;border-radius:3px;word-break:break-all;"></code></li>
-              <li>Generate a token above, paste it in the app — or scan the QR code.</li>
-              <li>Tap <strong>Continue</strong> and sign in with your username + password.</li>
+              <li>Enter your server URL: <code id="mobile-server-url-hint" style="font-size:11px;background:rgba(0,0,0,0.1);padding:1px 5px;border-radius:3px;word-break:break-all;"></code></li>
+              <li>Sign in with your username + password — a mobile token is created <strong>automatically</strong>.</li>
+              <li>Need a token for a second device? Generate one manually above and paste it in the app's First Run screen.</li>
             </ol>
           </div>
         </div>
