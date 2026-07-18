@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -193,7 +194,7 @@ fun FirstRunScreen(onDone: () -> Unit, vm: AuthViewModel = viewModel()) {
             modifier = Modifier.fillMaxWidth().height(52.dp),
             enabled  = serverUrl.startsWith("http")
         ) {
-            Icon(Icons.Default.ArrowForward, null, Modifier.size(18.dp))
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
             Text("Continue to Login", style = MaterialTheme.typography.titleMedium)
         }

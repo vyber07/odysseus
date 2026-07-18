@@ -9,6 +9,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -64,9 +68,9 @@ class MainActivity : ComponentActivity() {
 
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
     object FirstRun  : Screen("first_run",  "Setup",      Icons.Default.Settings)
-    object Login     : Screen("login",      "Login",      Icons.Default.Login)
-    object Chat      : Screen("chat",       "Chats",      Icons.Default.Chat)
-    object Notes     : Screen("notes",      "Notes",      Icons.Default.Notes)
+    object Login     : Screen("login",      "Login",      Icons.AutoMirrored.Filled.Login)
+    object Chat      : Screen("chat",       "Chats",      Icons.AutoMirrored.Filled.Chat)
+    object Notes     : Screen("notes",      "Notes",      Icons.AutoMirrored.Filled.Notes)
     object Tasks     : Screen("tasks",      "Tasks",      Icons.Default.Schedule)
     object Calendar  : Screen("calendar",   "Calendar",   Icons.Default.CalendarMonth)
     object Email     : Screen("email",      "Email",      Icons.Default.Email)
@@ -290,7 +294,7 @@ fun OdysseusSidebar(
                     tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
             }
             IconButton(onClick = onLogout, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.Default.Logout, null,
+                Icon(Icons.AutoMirrored.Filled.Logout, null,
                     Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
             }
