@@ -41,6 +41,7 @@ function initTabs() {
       document.body.classList.toggle('settings-appearance-open', tab === 'appearance');
       syncAppearanceOpacity(tab === 'appearance');
       if (tab === 'ai') refreshAiModelEndpoints();
+      if (tab === 'mobile') loadMobileSessions();
     });
   });
 }
@@ -2315,6 +2316,123 @@ function initAccount() {
   }
 }
 
+// ── Mobile App settings ──────────────────────────────────────────────────────
+
+function _esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function loadMobileSessions() {
+  const listEl = el('mobile-sessions-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="font-size:11px;opacity:0.5;padding:6px 0;">Loading…</div>';
+  fetch('/api/tokens/mobile', { credentials: 'same-origin' })
+    .then(r => r.ok ? r.json() : [])
+    .then(tokens => {
+      if (!tokens.length) {
+        listEl.innerHTML = '<div style="font-size:11px;opacity:0.5;padding:6px 0;">No active mobile sessions.</div>';
+        return;
+      }
+      listEl.innerHTML = tokens.map(t => {
+        const used = t.last_used_at ? new Date(t.last_used_at).toLocaleString() : 'Never';
+        const created = t.created_at ? new Date(t.created_at).toLocaleDateString() : '';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;flex-shrink:0;"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:600;">${_esc(t.name)}</div>
+            <div style="font-size:10px;opacity:0.55;">${_esc(t.token_prefix)}… · Created ${_esc(created)} · Last used ${_esc(used)}</div>
+          </div>
+          <button class="admin-btn-sm" data-revoke-id="${_esc(t.id)}" style="color:var(--color-error);border-color:var(--color-error);background:transparent;display:inline-flex;align-items:center;gap:4px;font-size:11px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Revoke
+          </button>
+        </div>`;
+      }).join('');
+      listEl.querySelectorAll('[data-revoke-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.revokeId;
+          btn.disabled = true;
+          btn.textContent = '…';
+          fetch(`/api/tokens/mobile/${id}`, { method: 'DELETE', credentials: 'same-origin' })
+            .then(() => loadMobileSessions())
+            .catch(() => { btn.disabled = false; btn.textContent = 'Revoke'; });
+        });
+      });
+    })
+    .catch(() => {
+      listEl.innerHTML = '<div style="font-size:11px;opacity:0.5;">Failed to load sessions.</div>';
+    });
+}
+
+function initMobile() {
+  // Populate server URL hint
+  const hintEl = el('mobile-server-url-hint');
+  if (hintEl) hintEl.textContent = window.location.origin + '/';
+
+  // Generate token
+  const genBtn = el('mobile-token-generate-btn');
+  const revealEl = el('mobile-token-reveal');
+  const tokenValueEl = el('mobile-token-value');
+  const copyBtn = el('mobile-token-copy-btn');
+  const copyMsgEl = el('mobile-token-copy-msg');
+  const msgEl = el('mobile-token-msg');
+  const nameInput = el('mobile-token-name');
+
+  if (!genBtn) return;
+
+  genBtn.addEventListener('click', async () => {
+    const name = (nameInput && nameInput.value.trim()) || '';
+    genBtn.disabled = true;
+    const origLabel = genBtn.innerHTML;
+    genBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg> Generating…';
+    if (msgEl) { msgEl.textContent = ''; msgEl.style.color = ''; }
+    try {
+      const fd = new FormData();
+      if (name) fd.append('name', name);
+      const r = await fetch('/api/tokens/mobile', { method: 'POST', credentials: 'same-origin', body: fd });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      const token = data.token || '';
+      if (tokenValueEl) tokenValueEl.textContent = token;
+      if (revealEl) revealEl.style.display = '';
+
+      // Generate QR code (encodes JSON with url + token for the app)
+      const qrCanvas = el('mobile-qr-canvas');
+      if (qrCanvas && window.QRCode) {
+        const payload = JSON.stringify({ url: window.location.origin + '/', token });
+        qrCanvas.width = 200; qrCanvas.height = 200;
+        window.QRCode.toCanvas(qrCanvas, payload, { width: 200, margin: 2, color: { dark: '#000', light: '#fff' } });
+      }
+
+      if (msgEl) { msgEl.style.color = 'var(--color-success)'; msgEl.textContent = '✓ Token created'; }
+      loadMobileSessions();
+    } catch (e) {
+      if (msgEl) { msgEl.style.color = 'var(--color-error)'; msgEl.textContent = 'Error: ' + e.message; }
+    } finally {
+      genBtn.disabled = false;
+      genBtn.innerHTML = origLabel;
+    }
+  });
+
+  // Copy token
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const val = tokenValueEl ? tokenValueEl.textContent : '';
+      if (!val) return;
+      navigator.clipboard.writeText(val).then(() => {
+        if (copyMsgEl) { copyMsgEl.textContent = '✓ Copied to clipboard'; setTimeout(() => { copyMsgEl.textContent = ''; }, 2000); }
+      }).catch(() => {
+        if (copyMsgEl) { copyMsgEl.textContent = 'Copy failed — select text manually'; }
+      });
+    });
+  }
+
+  // Load QRCode lib lazily
+  if (!window.QRCode) {
+    const s = document.createElement('script');
+    s.src = '/static/lib/qrcode.min.js';
+    document.head.appendChild(s);
+  }
+}
+
 function initAll() {
   modalEl = el('settings-modal');
   initTabs();
@@ -2337,6 +2455,7 @@ function initAll() {
   initAppearance();
   initShortcuts();
   initAccount();
+  initMobile();
   initIntegrations();
   initEmailSettings();
   initEmailAccountsSettings();
