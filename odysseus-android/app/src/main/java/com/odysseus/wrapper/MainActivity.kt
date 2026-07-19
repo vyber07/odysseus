@@ -1,6 +1,10 @@
 package com.odysseus.wrapper
 
 import android.os.Bundle
+import android.os.Build
+import java.io.File
+import java.io.StringWriter
+import java.io.PrintWriter
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -14,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,6 +55,16 @@ import kotlinx.coroutines.runBlocking
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val previousHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                val trace = StringWriter().also { throwable.printStackTrace(PrintWriter(it)) }.toString()
+                File(filesDir, "last_crash.txt").writeText(
+                    Build.MANUFACTURER + " " + Build.MODEL + "\n" + Build.VERSION.SDK_INT + "\n\n" + trace
+                )
+            } catch (_: Exception) { }
+            previousHandler?.uncaughtException(thread, throwable)
+        }
         enableEdgeToEdge()
         val prefs = UserPreferences(this)
         val savedUrl = runBlocking { prefs.serverUrl.first() }
@@ -71,29 +86,39 @@ class MainActivity : ComponentActivity() {
 sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
     object FirstRun  : Screen("first_run",  "Setup",      Icons.Default.Settings)
     object Login     : Screen("login",      "Login",      Icons.AutoMirrored.Filled.Login)
+    object NewChat   : Screen("new_chat",   "New Chat",   Icons.Default.Add)
+    object Search    : Screen("search",     "Search",     Icons.Default.Search)
     object Chat      : Screen("chat",       "Chats",      Icons.AutoMirrored.Filled.Chat)
+    object Brain     : Screen("brain",      "Brain",      Icons.Default.Psychology)
+    object Calendar  : Screen("calendar",   "Calendar",   Icons.Default.CalendarMonth)
+    object Compare   : Screen("compare",    "Compare",    Icons.Default.Compare)
+    object Cookbook  : Screen("cookbook",   "Cookbook",   Icons.Default.MenuBook)
+    object Research  : Screen("research",   "Deep Research", Icons.Default.TravelExplore)
+    object Gallery   : Screen("gallery",    "Gallery",    Icons.Default.PhotoLibrary)
+    object Library   : Screen("library",    "Library",    Icons.Default.LocalLibrary)
+    object Documents : Screen("documents",  "Documents",  Icons.Default.Description)
     object Notes     : Screen("notes",      "Notes",      Icons.AutoMirrored.Filled.Notes)
     object Tasks     : Screen("tasks",      "Tasks",      Icons.Default.Schedule)
-    object Calendar  : Screen("calendar",   "Calendar",   Icons.Default.CalendarMonth)
     object Email     : Screen("email",      "Email",      Icons.Default.Email)
-    object Documents : Screen("documents",  "Documents",  Icons.Default.Description)
-    object Gallery   : Screen("gallery",    "Gallery",    Icons.Default.PhotoLibrary)
-    object Research  : Screen("research",   "Research",   Icons.Default.TravelExplore)
-    object Memory    : Screen("memory",     "Memory",     Icons.Default.Psychology)
+    object Theme     : Screen("theme",      "Theme",      Icons.Default.Palette)
     object Settings  : Screen("settings",   "Settings",   Icons.Default.Settings)
 }
 
 // Same order as Odysseus webapp sidebar sections
 private val sidebarItems = listOf(
-    Screen.Chat,
-    Screen.Email,
+    Screen.NewChat,
+    Screen.Search,
+    Screen.Brain,
+    Screen.Calendar,
+    Screen.Compare,
+    Screen.Cookbook,
+    Screen.Research,
+    Screen.Gallery,
+    Screen.Library,
+    Screen.Documents,
     Screen.Notes,
     Screen.Tasks,
-    Screen.Calendar,
-    Screen.Documents,
-    Screen.Gallery,
-    Screen.Research,
-    Screen.Memory
+    Screen.Theme
 )
 
 // ── Root composable ───────────────────────────────────────────────────────────
@@ -107,15 +132,14 @@ fun OdysseusApp(authVm: AuthViewModel) {
     val firstRunDone   by authVm.firstRunDone.collectAsStateWithLifecycle()
     val currentEntry   by navController.currentBackStackEntryAsState()
     val currentRoute   = currentEntry?.destination?.route
+    val startDest = when {
+        !firstRunDone || savedUrl.isEmpty() -> Screen.FirstRun.route
+        !isLoggedIn                         -> Screen.Login.route
+        else                                -> Screen.Chat.route
+    }
 
     val authRoutes = setOf(Screen.FirstRun.route, Screen.Login.route)
     val showDrawer = currentRoute != null && currentRoute !in authRoutes
-
-    val startDest = when {
-        !firstRunDone || savedUrl.isEmpty() -> Screen.FirstRun.route
-        !isLoggedIn                          -> Screen.Login.route
-        else                                 -> Screen.Chat.route
-    }
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope       = rememberCoroutineScope()
@@ -143,7 +167,7 @@ fun OdysseusApp(authVm: AuthViewModel) {
                     onLogout = {
                         authVm.logout()
                         scope.launch { drawerState.close() }
-                        navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
+                        navController.navigate(Screen.Login.route) { popUpTo(Screen.Chat.route) { inclusive = true } }
                     }
                 )
             }
@@ -328,7 +352,14 @@ fun MainNavHost(
                 }
             })
         }
+        composable(Screen.NewChat.route)   { ChatScreen() }
+        composable(Screen.Search.route)    { ChatScreen() }
         composable(Screen.Chat.route)      { ChatScreen() }
+        composable(Screen.Brain.route)     { MemoryScreen() }
+        composable(Screen.Compare.route)   { ChatScreen() }
+        composable(Screen.Cookbook.route)  { ChatScreen() }
+        composable(Screen.Library.route)   { ChatScreen() }
+        composable(Screen.Theme.route)     { ChatScreen() }
         composable(Screen.Notes.route)     { NotesScreen() }
         composable(Screen.Tasks.route)     { TasksScreen() }
         composable(Screen.Calendar.route)  { CalendarScreen() }
@@ -336,10 +367,9 @@ fun MainNavHost(
         composable(Screen.Documents.route) { DocumentsScreen() }
         composable(Screen.Gallery.route)   { GalleryScreen() }
         composable(Screen.Research.route)  { ResearchScreen() }
-        composable(Screen.Memory.route)    { MemoryScreen() }
         composable(Screen.Settings.route) {
             SettingsScreen(authVm = authVm, onLogout = {
-                navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
+                navController.navigate(Screen.Login.route) { popUpTo(Screen.Chat.route) { inclusive = true } }
             })
         }
     }

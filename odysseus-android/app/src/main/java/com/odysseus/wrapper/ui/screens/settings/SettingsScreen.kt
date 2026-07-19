@@ -41,12 +41,21 @@ import kotlinx.coroutines.launch
 
 // ── Tab definition ────────────────────────────────────────────────────────────
 private enum class SettingsTab(val label: String, val icon: ImageVector) {
-    SERVER    ("Server",      Icons.Default.Dns),
-    APPEARANCE("Appearance",  Icons.Default.Palette),
-    SIDEBAR   ("Sidebar",     Icons.AutoMirrored.Filled.ViewSidebar),
-    ACCOUNT   ("Account",     Icons.Default.Person),
-    MOBILE    ("Mobile App",  Icons.Default.PhoneAndroid),
-    ABOUT     ("About",       Icons.Default.Info)
+    ADD_MODELS    ("Add Models",    Icons.Default.AddCircle),
+    ADDED_MODELS  ("Added Models",  Icons.Default.List),
+    AI_DEFAULTS   ("AI Defaults",   Icons.Default.Psychology),
+    SEARCH        ("Search",        Icons.Default.Search),
+    INTEGRATIONS  ("Integrations",  Icons.Default.Extension),
+    EMAIL         ("Email",         Icons.Default.Email),
+    REMINDERS     ("Reminders",     Icons.Default.Alarm),
+    APPEARANCE    ("Appearance",    Icons.Default.Palette),
+    SHORTCUTS     ("Shortcuts",     Icons.Default.Keyboard),
+    ACCOUNT       ("Account",       Icons.Default.Person),
+    MOBILE_APP    ("Mobile App",    Icons.Default.PhoneAndroid),
+    ADMIN         ("Admin",         Icons.Default.AdminPanelSettings),
+    AGENT_TOOLS   ("Agent Tools",   Icons.Default.Build),
+    USERS         ("Users",         Icons.Default.People),
+    SYSTEM        ("System",        Icons.Default.Dns)
 }
 
 // ── Root screen ───────────────────────────────────────────────────────────────
@@ -56,7 +65,7 @@ fun SettingsScreen(
     authVm: AuthViewModel = viewModel(),
     onLogout: () -> Unit
 ) {
-    var activeTab by remember { mutableStateOf(SettingsTab.SERVER) }
+    var activeTab by remember { mutableStateOf(SettingsTab.ADD_MODELS) }
 
     Scaffold(
         topBar = {
@@ -110,7 +119,7 @@ fun SettingsScreen(
                                     else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                         )
                     }
-                    if (tab == SettingsTab.SERVER || tab == SettingsTab.SIDEBAR || tab == SettingsTab.MOBILE) {
+                    if (tab == SettingsTab.SYSTEM || tab == SettingsTab.APPEARANCE || tab == SettingsTab.MOBILE_APP) {
                         HorizontalDivider(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
@@ -122,12 +131,21 @@ fun SettingsScreen(
             // ── Right content panel ───────────────────────────────────────────
             Box(Modifier.weight(1f).fillMaxHeight()) {
                 when (activeTab) {
-                    SettingsTab.SERVER     -> ServerPanel(authVm)
-                    SettingsTab.APPEARANCE -> AppearancePanel(authVm)
-                    SettingsTab.SIDEBAR    -> SidebarPanel(authVm)
-                    SettingsTab.ACCOUNT    -> AccountPanel(authVm, onLogout)
-                    SettingsTab.MOBILE     -> MobilePanel(authVm)
-                    SettingsTab.ABOUT      -> AboutPanel()
+                    SettingsTab.ADD_MODELS    -> PlaceholderPanel("Add Models")
+                    SettingsTab.ADDED_MODELS  -> PlaceholderPanel("Added Models")
+                    SettingsTab.AI_DEFAULTS   -> PlaceholderPanel("AI Defaults")
+                    SettingsTab.SEARCH        -> PlaceholderPanel("Search")
+                    SettingsTab.INTEGRATIONS  -> IntegrationsPanel()
+                    SettingsTab.EMAIL         -> PlaceholderPanel("Email")
+                    SettingsTab.REMINDERS     -> PlaceholderPanel("Reminders")
+                    SettingsTab.APPEARANCE    -> AppearancePanel(authVm)
+                    SettingsTab.SHORTCUTS     -> PlaceholderPanel("Shortcuts")
+                    SettingsTab.ACCOUNT       -> AccountPanel(authVm, onLogout)
+                    SettingsTab.MOBILE_APP    -> MobilePanel(authVm)
+                    SettingsTab.ADMIN         -> PlaceholderPanel("Admin")
+                    SettingsTab.AGENT_TOOLS   -> PlaceholderPanel("Agent Tools")
+                    SettingsTab.USERS         -> PlaceholderPanel("Users")
+                    SettingsTab.SYSTEM        -> ServerPanel(authVm)
                 }
             }
         }
@@ -786,5 +804,71 @@ private fun SettingsToggleRow(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
         }
         Switch(checked = checked, onCheckedChange = onCheck, modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun PlaceholderPanel(title: String) {
+    PanelColumn {
+        SettingsCard(title, Icons.Default.Settings) {
+            Text("$title options will be available here soon.", color = MaterialTheme.colorScheme.onSurface.copy(0.6f))
+        }
+    }
+}
+
+@Composable
+private fun IntegrationsPanel() {
+    PanelColumn {
+        SettingsCard("Integrations", Icons.Default.Extension) {
+            Text("All external service connections in one place.", color = MaterialTheme.colorScheme.onSurface.copy(0.6f), fontSize = 13.sp)
+            Spacer(Modifier.height(8.dp))
+            
+            // Email
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Text("b26ed3001@smtp-brevo.com (default)", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("Email", color = MaterialTheme.colorScheme.onSurface.copy(0.6f), fontSize = 12.sp)
+                    Text("b26ed3001@smtp-brevo.com", color = MaterialTheme.colorScheme.onSurface.copy(0.6f), fontSize = 12.sp)
+                }
+            }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(0.2f))
+            
+            // Tinyfish
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Text("Tinyfish", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("MCP", color = MaterialTheme.colorScheme.onSurface.copy(0.6f), fontSize = 12.sp)
+                    Text("disconnected", color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                }
+            }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(0.2f))
+            
+            // Claude
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Text("Claude", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("Codex", color = MaterialTheme.colorScheme.onSurface.copy(0.6f), fontSize = 12.sp)
+                    Text("ody_vbus... - chat, todos:read, todos:write, documents:read, documents:write, email:read, email:draft, email:send, calendar:read, calendar:write, memory:read, memory:write, cookbook:read, cookbook:launch", color = MaterialTheme.colorScheme.onSurface.copy(0.6f), fontSize = 12.sp)
+                }
+            }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(0.2f))
+            
+            // Codex
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Text("Codex", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("Codex", color = MaterialTheme.colorScheme.onSurface.copy(0.6f), fontSize = 12.sp)
+                    Text("ody_swx7... - chat, todos:read, todos:write, documents:read, documents:write, email:read, email:draft, email:send, calendar:read, calendar:write, memory:read, memory:write, cookbook:read, cookbook:launch", color = MaterialTheme.colorScheme.onSurface.copy(0.6f), fontSize = 12.sp)
+                }
+            }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(0.2f))
+            
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = {}, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Default.Add, null, Modifier.size(16.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Add Integration")
+            }
+        }
     }
 }
