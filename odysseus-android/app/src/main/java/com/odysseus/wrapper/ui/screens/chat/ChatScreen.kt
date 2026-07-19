@@ -165,7 +165,7 @@ fun ChatScreen(vm: ChatViewModel = viewModel()) {
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    items(messages, key = { it.hashCode() }) { msg ->
+                    items(messages) { msg ->
                         ChatGPTStyleBubble(msg)
                     }
                     if (sending) {
