@@ -1403,6 +1403,10 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             <span>Account</span>
           </button>
+          <button class="settings-nav-item" data-settings-tab="mobile">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            <span>Mobile App</span>
+          </button>
           <div class="settings-sidebar-divider admin-only"></div>
           <div class="settings-sidebar-label admin-only">Admin</div>
           <button class="settings-nav-item admin-only" data-settings-tab="tools">
@@ -1958,6 +1962,54 @@
             <div id="settings-2fa-content">
               <!-- Populated by JS -->
             </div>
+          </div>
+        </div>
+
+        <!-- ═══ MOBILE APP TAB ═══ -->
+        <div data-settings-panel="mobile" class="hidden">
+          <div class="admin-card">
+            <h2><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;opacity:0.6"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>Connect Mobile App</h2>
+            <div class="admin-toggle-sub" style="margin-bottom:12px;">Generate a token to connect the Odysseus Android app to this server. Tokens are scoped to your account only.</div>
+            <div class="settings-row" style="align-items:center;gap:8px;margin-bottom:8px;">
+              <input id="mobile-token-name" class="settings-select" style="flex:1;" placeholder="Token name (e.g. My Phone)" maxlength="80">
+              <button class="admin-btn-add" id="mobile-token-generate-btn" style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Generate Token
+              </button>
+            </div>
+            <div id="mobile-token-reveal" style="display:none;margin-bottom:8px;">
+              <div style="font-size:11px;opacity:0.6;margin-bottom:6px;">Copy this token — it won't be shown again. Paste it in the app's server setup screen.</div>
+              <div style="position:relative;">
+                <code id="mobile-token-value" style="display:block;word-break:break-all;font-size:11px;padding:8px 34px 8px 10px;background:rgba(0,0,0,0.12);border-radius:6px;border:1px solid var(--border);line-height:1.5;"></code>
+                <button type="button" id="mobile-token-copy-btn" title="Copy token" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--fg);opacity:0.65;display:inline-flex;align-items:center;padding:4px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+              </div>
+              <div id="mobile-token-copy-msg" style="font-size:11px;min-height:14px;margin-top:4px;color:var(--color-success);"></div>
+              <div id="mobile-token-qr-wrap" style="margin-top:14px;">
+                <div style="font-size:11px;font-weight:600;margin-bottom:4px;">Scan QR in the app</div>
+                <div style="font-size:11px;opacity:0.6;margin-bottom:8px;">QR encodes your server URL + token for one-tap setup.</div>
+                <canvas id="mobile-qr-canvas" style="border-radius:6px;display:block;"></canvas>
+              </div>
+            </div>
+            <div id="mobile-token-msg" style="font-size:11px;min-height:14px;margin-top:4px;"></div>
+          </div>
+
+          <div class="admin-card">
+            <h2><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;opacity:0.6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Active Mobile Sessions</h2>
+            <div class="admin-toggle-sub" style="margin-bottom:8px;">Tokens authorised to access Odysseus from the mobile app. Revoke any you don't recognise.</div>
+            <div id="mobile-sessions-list"><div style="font-size:11px;opacity:0.5;padding:6px 0;">Loading…</div></div>
+          </div>
+
+          <div class="admin-card">
+            <h2><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;opacity:0.6"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Setup Instructions</h2>
+            <ol style="font-size:12px;line-height:1.85;opacity:0.8;margin:0;padding-left:18px;">
+              <li>Install the <strong>Odysseus</strong> app on your Android device.</li>
+              <li>Open the app → tap <strong>Connect to server</strong>.</li>
+              <li>Enter server URL: <code id="mobile-server-url-hint" style="font-size:11px;background:rgba(0,0,0,0.1);padding:1px 5px;border-radius:3px;word-break:break-all;"></code></li>
+              <li>Generate a token above, paste it in the app — or scan the QR code.</li>
+              <li>Tap <strong>Continue</strong> and sign in with your username + password.</li>
+            </ol>
           </div>
         </div>
 
