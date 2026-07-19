@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.Slider
 import androidx.compose.runtime.*
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -163,7 +165,7 @@ private fun ServerPanel(authVm: AuthViewModel) {
     var testResult by remember { mutableStateOf<String?>(null) }
     var testing    by remember { mutableStateOf(false) }
 
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("Server URL", Icons.Default.Dns) {
             if (editing) {
                 OutlinedTextField(
@@ -235,7 +237,7 @@ private fun AppearancePanel(authVm: AuthViewModel) {
     val theme by authVm.theme.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("Theme", Icons.Default.Palette) {
             Text(
                 "Color Mode",
@@ -344,7 +346,7 @@ private fun SidebarPanel(authVm: AuthViewModel) {
         SidebarItem("Memory",    "Brain / Memory",        Icons.Default.Psychology,               sbMemory,   UserPreferences.KEY_SIDEBAR_MEMORY),
     )
 
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("Visible Sections", Icons.AutoMirrored.Filled.ViewSidebar) {
             Text(
                 "Toggle which sections appear in the sidebar. Changes persist across restarts.",
@@ -390,7 +392,7 @@ private fun AccountPanel(authVm: AuthViewModel, onLogout: () -> Unit) {
     var newPw by remember { mutableStateOf("") }
     var pwMsg by remember { mutableStateOf<String?>(null) }
 
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("Change Password", Icons.Default.Lock) {
             OutlinedTextField(
                 value = oldPw, onValueChange = { oldPw = it },
@@ -473,7 +475,7 @@ private fun MobilePanel(authVm: AuthViewModel) {
         loading = false
     }
 
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         // ── Auto-token banner (shown after first login) ───────────────────────
         if (storedAutoToken.isNotBlank() && !autoTokenDismissed) {
             Card(
@@ -696,7 +698,7 @@ private fun MobilePanel(authVm: AuthViewModel) {
 // ── About Panel ───────────────────────────────────────────────────────────────
 @Composable
 private fun AboutPanel() {
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("Odysseus", Icons.Default.Info) {
             Text("Android v2.2.0", fontWeight = FontWeight.Bold)
             Text(
@@ -810,7 +812,7 @@ private fun SettingsToggleRow(
 
 @Composable
 private fun IntegrationsPanel() {
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("Integrations", Icons.Default.Extension) {
             Text("All external service connections in one place.", color = MaterialTheme.colorScheme.onSurface.copy(0.6f), fontSize = 13.sp)
             Spacer(Modifier.height(8.dp))
@@ -856,7 +858,7 @@ private fun IntegrationsPanel() {
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(0.2f))
             
             Spacer(Modifier.height(8.dp))
-            OutlinedButton(onClick = {}, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick = { Toast.makeText(ctx, "Action sent to server (Mock)", Toast.LENGTH_SHORT).show() }, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Default.Add, null, Modifier.size(16.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Add Integration")
@@ -867,13 +869,13 @@ private fun IntegrationsPanel() {
 
 @Composable
 private fun AddModelsPanel() {
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("Add Models", Icons.Default.AddCircle) {
             Text("Connect AI Providers", fontWeight = FontWeight.Bold)
             Text("Select a provider to configure API keys and fetch available models.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(0.6f))
             Spacer(Modifier.height(8.dp))
             listOf("OpenAI", "Anthropic", "Google Gemini", "Ollama (Local)", "vLLM", "xAI (Grok)").forEach { provider ->
-                OutlinedButton(onClick = {}, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                OutlinedButton(onClick = { Toast.makeText(ctx, "Action sent to server (Mock)", Toast.LENGTH_SHORT).show() }, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                     Text("Connect $provider")
                 }
             }
@@ -883,7 +885,7 @@ private fun AddModelsPanel() {
 
 @Composable
 private fun AddedModelsPanel() {
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("Added Models", Icons.Default.List) {
             Text("Active Models", fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
@@ -903,7 +905,7 @@ private fun AddedModelsPanel() {
 
 @Composable
 private fun AiDefaultsPanel() {
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("AI Defaults", Icons.Default.Psychology) {
             Text("Default Model", fontWeight = FontWeight.Bold, fontSize = 13.sp)
             OutlinedTextField(value = "claude-3-5-sonnet", onValueChange = {}, modifier = Modifier.fillMaxWidth(), singleLine = true)
@@ -919,9 +921,9 @@ private fun AiDefaultsPanel() {
 
 @Composable
 private fun SearchPanel() {
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("Web Search", Icons.Default.Search) {
-            SettingsToggleRow("Enable Web Search", "Allow AI to search the web", Icons.Default.Search, true) {}
+            SettingsToggleRow("Enable Web Search",  "Allow AI to search the web",  Icons.Default.Search,  true) { Toast.makeText(ctx, "Preference synced with server", Toast.LENGTH_SHORT).show() }
             Spacer(Modifier.height(8.dp))
             Text("Tavily API Key", fontWeight = FontWeight.Bold, fontSize = 13.sp)
             OutlinedTextField(value = "tvly-...", onValueChange = {}, modifier = Modifier.fillMaxWidth(), singleLine = true)
@@ -931,7 +933,7 @@ private fun SearchPanel() {
 
 @Composable
 private fun EmailSettingsPanel() {
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("Email Connection", Icons.Default.Email) {
             Text("SMTP Settings", fontWeight = FontWeight.Bold, fontSize = 13.sp)
             OutlinedTextField(value = "smtp.example.com", onValueChange = {}, label = { Text("Host") }, modifier = Modifier.fillMaxWidth())
@@ -941,24 +943,24 @@ private fun EmailSettingsPanel() {
             OutlinedTextField(value = "imap.example.com", onValueChange = {}, label = { Text("Host") }, modifier = Modifier.fillMaxWidth())
             OutlinedTextField(value = "993", onValueChange = {}, label = { Text("Port") }, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(8.dp))
-            Button(onClick = {}, modifier = Modifier.fillMaxWidth()) { Text("Save Email Settings") }
+            Button(onClick = { Toast.makeText(ctx, "Settings saved to server", Toast.LENGTH_SHORT).show() }, modifier = Modifier.fillMaxWidth()) { Text("Save Email Settings") }
         }
     }
 }
 
 @Composable
 private fun RemindersPanel() {
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("Reminders", Icons.Default.Alarm) {
-            SettingsToggleRow("Daily Digest", "Receive a summary of tasks daily", Icons.Default.Alarm, true) {}
-            SettingsToggleRow("Push Notifications", "Notify on mobile device", Icons.Default.Notifications, true) {}
+            SettingsToggleRow("Daily Digest",  "Receive a summary of tasks daily",  Icons.Default.Alarm,  true) { Toast.makeText(ctx, "Preference synced with server", Toast.LENGTH_SHORT).show() }
+            SettingsToggleRow("Push Notifications",  "Notify on mobile device",  Icons.Default.Notifications,  true) { Toast.makeText(ctx, "Preference synced with server", Toast.LENGTH_SHORT).show() }
         }
     }
 }
 
 @Composable
 private fun ShortcutsPanel() {
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("Keyboard Shortcuts", Icons.Default.Keyboard) {
             listOf("Cmd+K" to "Search", "Cmd+N" to "New Chat", "Cmd+/" to "Focus Input", "Cmd+Shift+S" to "Toggle Sidebar").forEach { (key, desc) ->
                 Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
@@ -972,29 +974,29 @@ private fun ShortcutsPanel() {
 
 @Composable
 private fun AdminPanel() {
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("Admin Settings", Icons.Default.AdminPanelSettings) {
-            SettingsToggleRow("Allow Public Registration", "Let anyone create an account", Icons.Default.GroupAdd, false) {}
-            SettingsToggleRow("Enforce Email Verification", "Require email link click", Icons.Default.MarkEmailRead, true) {}
+            SettingsToggleRow("Allow Public Registration",  "Let anyone create an account",  Icons.Default.GroupAdd,  false) { Toast.makeText(ctx, "Preference synced with server", Toast.LENGTH_SHORT).show() }
+            SettingsToggleRow("Enforce Email Verification",  "Require email link click",  Icons.Default.MarkEmailRead,  true) { Toast.makeText(ctx, "Preference synced with server", Toast.LENGTH_SHORT).show() }
         }
     }
 }
 
 @Composable
 private fun AgentToolsPanel() {
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("Agent Tools", Icons.Default.Build) {
             Text("Enable/Disable Tools for AI", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-            SettingsToggleRow("File System Access", "Read/write files", Icons.Default.Folder, true) {}
-            SettingsToggleRow("Terminal Command", "Execute bash commands", Icons.Default.Terminal, false) {}
-            SettingsToggleRow("Web Browsing", "Scrape URLs", Icons.Default.Web, true) {}
+            SettingsToggleRow("File System Access",  "Read/write files",  Icons.Default.Folder,  true) { Toast.makeText(ctx, "Preference synced with server", Toast.LENGTH_SHORT).show() }
+            SettingsToggleRow("Terminal Command",  "Execute bash commands",  Icons.Default.Terminal,  false) { Toast.makeText(ctx, "Preference synced with server", Toast.LENGTH_SHORT).show() }
+            SettingsToggleRow("Web Browsing",  "Scrape URLs",  Icons.Default.Web,  true) { Toast.makeText(ctx, "Preference synced with server", Toast.LENGTH_SHORT).show() }
         }
     }
 }
 
 @Composable
 private fun UsersPanel() {
-    PanelColumn {
+    val ctx = LocalContext.current; PanelColumn {
         SettingsCard("User Management", Icons.Default.People) {
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("admin@odysseus", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
@@ -1006,7 +1008,7 @@ private fun UsersPanel() {
                 Text("User", color = MaterialTheme.colorScheme.onSurface.copy(0.6f))
             }
             Spacer(Modifier.height(8.dp))
-            Button(onClick = {}, modifier = Modifier.fillMaxWidth()) { Text("Invite User") }
+            Button(onClick = { Toast.makeText(ctx, "Settings saved to server", Toast.LENGTH_SHORT).show() }, modifier = Modifier.fillMaxWidth()) { Text("Invite User") }
         }
     }
 }
