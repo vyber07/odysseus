@@ -28,6 +28,8 @@ ALLOWED_SCOPES = {
     "memory:write",
     "cookbook:read",
     "cookbook:launch",
+    "notes:read",
+    "notes:write",
 }
 TOKEN_PROFILES = {
     "chat": ["chat"],
