@@ -184,7 +184,39 @@ Documented `HOST_HOME` variable near Docker daemon section.
 - **Removed**: `"NEVER use bash to create or change files"` restriction
 - **Added**: Full shell access statement — all constructs work (`>`, `>>`, `tee`, `sed -i`, heredocs)
 - **Added**: `HOST FILESYSTEM: the host machine's home directory is mounted at /host-home`
+- **Added**: Reference to interactive terminal panel in sidebar
 - AI now knows it can use `/host-home/` to read/write files on the host outside Docker
+
+#### src/tool_execution.py — bash tool HOME fix
+- **Removed** `"HOME": _AGENT_WORKDIR` override from `_direct_fallback` `_subproc_env`
+- Bash subprocesses now use the real container HOME (`/root`) so `~` expands correctly
+  and tools like git, pip, ssh find their config files
+
+---
+
+### 4. Interactive Terminal Panel
+
+#### static/js/terminal.js (NEW)
+Full-featured interactive terminal panel using `/api/shell/stream` SSE:
+- Command history (ArrowUp/Down, up to 200 entries)
+- Ctrl+C to cancel a running command
+- Built-in commands: `clear`, `exit`/`quit`
+- Colored output: blue for commands, red for stderr, grey for system messages
+- Auto-scroll, monospace font, full host filesystem access
+- Opens via: Terminal sidebar button, AI `ui_control open_panel terminal` (aliases: `shell`, `bash`)
+
+#### static/index.html — Terminal sidebar button
+Added "Terminal" list-item button (`#tool-terminal-btn`) after Notes in the sidebar tools section.
+
+#### static/app.js — terminal wiring
+- Imported `terminalModule from './js/terminal.js'`
+- Wired `#tool-terminal-btn` click → `terminalModule.togglePanel()`
+
+#### static/js/chatStream.js — open_panel handler
+Registered `panel === 'terminal' || 'shell' || 'bash'` → `import('./terminal.js').openPanel()`
+
+#### static/style.css — terminal CSS
+Added terminal panel styles: `.terminal-output`, `.terminal-line-*`, `.terminal-input-row`, `.terminal-prompt`, `.terminal-run-btn`
 
 ---
 
@@ -201,6 +233,7 @@ Documented `HOST_HOME` variable near Docker daemon section.
 
 | Commit | Message |
 |--------|---------|
+| `619bc99` | feat(terminal): add interactive terminal panel + fix bash tool HOME override |
 | `5841d19` | feat(bash): full shell access + /host-home path in bash tool description |
 | `0f3c705` | feat(docker): mount host home at /host-home for bash/shell host filesystem access |
 | `0a0c292` | feat(android): full settings sub-menus, persisted sidebar toggles, auto mobile token, Odysseus ship icon |
