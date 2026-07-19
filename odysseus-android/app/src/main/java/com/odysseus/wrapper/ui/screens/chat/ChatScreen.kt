@@ -204,10 +204,12 @@ fun ChatScreen(vm: ChatViewModel = viewModel()) {
                         textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
                         maxLines = 5,
                         decorationBox = { innerTextField ->
-                            if (inputText.isEmpty()) {
-                                Text("Message Odysseus...", color = MaterialTheme.colorScheme.onSurface.copy(0.4f))
+                            Box(contentAlignment = Alignment.CenterStart) {
+                                if (inputText.isEmpty()) {
+                                    Text("Message Odysseus...", color = MaterialTheme.colorScheme.onSurface.copy(0.4f))
+                                }
+                                innerTextField()
                             }
-                            innerTextField()
                         }
                     )
                     
