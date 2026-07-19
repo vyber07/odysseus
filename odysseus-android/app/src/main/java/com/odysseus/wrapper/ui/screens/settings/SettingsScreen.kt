@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.StickyNote2
 import androidx.compose.material.icons.automirrored.filled.ViewSidebar
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.Slider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -131,20 +132,20 @@ fun SettingsScreen(
             // ── Right content panel ───────────────────────────────────────────
             Box(Modifier.weight(1f).fillMaxHeight()) {
                 when (activeTab) {
-                    SettingsTab.ADD_MODELS    -> PlaceholderPanel("Add Models")
-                    SettingsTab.ADDED_MODELS  -> PlaceholderPanel("Added Models")
-                    SettingsTab.AI_DEFAULTS   -> PlaceholderPanel("AI Defaults")
-                    SettingsTab.SEARCH        -> PlaceholderPanel("Search")
+                    SettingsTab.ADD_MODELS    -> AddModelsPanel()
+                    SettingsTab.ADDED_MODELS  -> AddedModelsPanel()
+                    SettingsTab.AI_DEFAULTS   -> AiDefaultsPanel()
+                    SettingsTab.SEARCH        -> SearchPanel()
                     SettingsTab.INTEGRATIONS  -> IntegrationsPanel()
-                    SettingsTab.EMAIL         -> PlaceholderPanel("Email")
-                    SettingsTab.REMINDERS     -> PlaceholderPanel("Reminders")
+                    SettingsTab.EMAIL         -> EmailSettingsPanel()
+                    SettingsTab.REMINDERS     -> RemindersPanel()
                     SettingsTab.APPEARANCE    -> AppearancePanel(authVm)
-                    SettingsTab.SHORTCUTS     -> PlaceholderPanel("Shortcuts")
+                    SettingsTab.SHORTCUTS     -> ShortcutsPanel()
                     SettingsTab.ACCOUNT       -> AccountPanel(authVm, onLogout)
                     SettingsTab.MOBILE_APP    -> MobilePanel(authVm)
-                    SettingsTab.ADMIN         -> PlaceholderPanel("Admin")
-                    SettingsTab.AGENT_TOOLS   -> PlaceholderPanel("Agent Tools")
-                    SettingsTab.USERS         -> PlaceholderPanel("Users")
+                    SettingsTab.ADMIN         -> AdminPanel()
+                    SettingsTab.AGENT_TOOLS   -> AgentToolsPanel()
+                    SettingsTab.USERS         -> UsersPanel()
                     SettingsTab.SYSTEM        -> ServerPanel(authVm)
                 }
             }
@@ -808,15 +809,6 @@ private fun SettingsToggleRow(
 }
 
 @Composable
-private fun PlaceholderPanel(title: String) {
-    PanelColumn {
-        SettingsCard(title, Icons.Default.Settings) {
-            Text("$title options will be available here soon.", color = MaterialTheme.colorScheme.onSurface.copy(0.6f))
-        }
-    }
-}
-
-@Composable
 private fun IntegrationsPanel() {
     PanelColumn {
         SettingsCard("Integrations", Icons.Default.Extension) {
@@ -869,6 +861,152 @@ private fun IntegrationsPanel() {
                 Spacer(Modifier.width(8.dp))
                 Text("Add Integration")
             }
+        }
+    }
+}
+
+@Composable
+private fun AddModelsPanel() {
+    PanelColumn {
+        SettingsCard("Add Models", Icons.Default.AddCircle) {
+            Text("Connect AI Providers", fontWeight = FontWeight.Bold)
+            Text("Select a provider to configure API keys and fetch available models.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(0.6f))
+            Spacer(Modifier.height(8.dp))
+            listOf("OpenAI", "Anthropic", "Google Gemini", "Ollama (Local)", "vLLM", "xAI (Grok)").forEach { provider ->
+                OutlinedButton(onClick = {}, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                    Text("Connect $provider")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddedModelsPanel() {
+    PanelColumn {
+        SettingsCard("Added Models", Icons.Default.List) {
+            Text("Active Models", fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            listOf("gpt-4o", "claude-3-5-sonnet", "gemini-1.5-pro").forEach { model ->
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                    Icon(Icons.Default.Psychology, null, Modifier.size(16.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(model, fontSize = 14.sp)
+                    Spacer(Modifier.weight(1f))
+                    Icon(Icons.Default.Delete, "Remove", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(0.2f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun AiDefaultsPanel() {
+    PanelColumn {
+        SettingsCard("AI Defaults", Icons.Default.Psychology) {
+            Text("Default Model", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            OutlinedTextField(value = "claude-3-5-sonnet", onValueChange = {}, modifier = Modifier.fillMaxWidth(), singleLine = true)
+            Spacer(Modifier.height(12.dp))
+            Text("System Prompt", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            OutlinedTextField(value = "You are a helpful assistant.", onValueChange = {}, modifier = Modifier.fillMaxWidth(), minLines = 3)
+            Spacer(Modifier.height(12.dp))
+            Text("Temperature (0.0 - 2.0)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            Slider(value = 0.7f, onValueChange = {})
+        }
+    }
+}
+
+@Composable
+private fun SearchPanel() {
+    PanelColumn {
+        SettingsCard("Web Search", Icons.Default.Search) {
+            SettingsToggleRow("Enable Web Search", "Allow AI to search the web", Icons.Default.Search, true) {}
+            Spacer(Modifier.height(8.dp))
+            Text("Tavily API Key", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            OutlinedTextField(value = "tvly-...", onValueChange = {}, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        }
+    }
+}
+
+@Composable
+private fun EmailSettingsPanel() {
+    PanelColumn {
+        SettingsCard("Email Connection", Icons.Default.Email) {
+            Text("SMTP Settings", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            OutlinedTextField(value = "smtp.example.com", onValueChange = {}, label = { Text("Host") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = "587", onValueChange = {}, label = { Text("Port") }, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(12.dp))
+            Text("IMAP Settings", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            OutlinedTextField(value = "imap.example.com", onValueChange = {}, label = { Text("Host") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = "993", onValueChange = {}, label = { Text("Port") }, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = {}, modifier = Modifier.fillMaxWidth()) { Text("Save Email Settings") }
+        }
+    }
+}
+
+@Composable
+private fun RemindersPanel() {
+    PanelColumn {
+        SettingsCard("Reminders", Icons.Default.Alarm) {
+            SettingsToggleRow("Daily Digest", "Receive a summary of tasks daily", Icons.Default.Alarm, true) {}
+            SettingsToggleRow("Push Notifications", "Notify on mobile device", Icons.Default.Notifications, true) {}
+        }
+    }
+}
+
+@Composable
+private fun ShortcutsPanel() {
+    PanelColumn {
+        SettingsCard("Keyboard Shortcuts", Icons.Default.Keyboard) {
+            listOf("Cmd+K" to "Search", "Cmd+N" to "New Chat", "Cmd+/" to "Focus Input", "Cmd+Shift+S" to "Toggle Sidebar").forEach { (key, desc) ->
+                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                    Text(desc, modifier = Modifier.weight(1f), fontSize = 14.sp)
+                    Text(key, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AdminPanel() {
+    PanelColumn {
+        SettingsCard("Admin Settings", Icons.Default.AdminPanelSettings) {
+            SettingsToggleRow("Allow Public Registration", "Let anyone create an account", Icons.Default.GroupAdd, false) {}
+            SettingsToggleRow("Enforce Email Verification", "Require email link click", Icons.Default.MarkEmailRead, true) {}
+        }
+    }
+}
+
+@Composable
+private fun AgentToolsPanel() {
+    PanelColumn {
+        SettingsCard("Agent Tools", Icons.Default.Build) {
+            Text("Enable/Disable Tools for AI", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            SettingsToggleRow("File System Access", "Read/write files", Icons.Default.Folder, true) {}
+            SettingsToggleRow("Terminal Command", "Execute bash commands", Icons.Default.Terminal, false) {}
+            SettingsToggleRow("Web Browsing", "Scrape URLs", Icons.Default.Web, true) {}
+        }
+    }
+}
+
+@Composable
+private fun UsersPanel() {
+    PanelColumn {
+        SettingsCard("User Management", Icons.Default.People) {
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("admin@odysseus", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
+                Text("Owner", color = MaterialTheme.colorScheme.primary)
+            }
+            HorizontalDivider()
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("guest@odysseus", modifier = Modifier.weight(1f))
+                Text("User", color = MaterialTheme.colorScheme.onSurface.copy(0.6f))
+            }
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = {}, modifier = Modifier.fillMaxWidth()) { Text("Invite User") }
         }
     }
 }
