@@ -305,13 +305,4 @@ Blocks outbound requests to:
 
 This is intentional security — NOT a bug. The `web_fetch: Blocked non-public IP literal: 169.254.169.254` error is correct behavior when the AI tries to access AWS instance metadata.
 
----
 
-## PENDING NEXT STEPS
-
-1. **Fix `/api/auth/status` for Bearer** — edit `routes/auth_routes.py` status endpoint to resolve bearer token owner (Android settings shows correct username)
-2. **Add notes scopes** — edit `routes/api_token_routes.py` `TOKEN_PROFILES["mobile_app"]` to include `"notes:read"`, `"notes:write"`
-3. After server fixes: rebuild APK → `./gradlew assembleDebug`
-4. Commit + push fixes to `dev` branch
-5. Restart Docker container after server-side changes
-6. Full e2e test: login → auto-token → Bearer auth status → notes via Bearer → revoke
