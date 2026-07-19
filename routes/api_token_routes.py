@@ -39,6 +39,7 @@ TOKEN_PROFILES = {
         "email:read", "email:draft",
         "calendar:read", "calendar:write",
         "memory:read", "memory:write",
+        "notes:read", "notes:write",
     ],
     "codex_todos": ["todos:read", "todos:write"],
     "codex_documents": ["documents:read", "documents:write"],
