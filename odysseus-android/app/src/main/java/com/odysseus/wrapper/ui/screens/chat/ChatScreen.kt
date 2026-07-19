@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -37,199 +36,125 @@ fun ChatScreen(vm: ChatViewModel = viewModel()) {
     val loading        by vm.loading.collectAsStateWithLifecycle()
     val error          by vm.error.collectAsStateWithLifecycle()
 
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope       = rememberCoroutineScope()
     var inputText   by remember { mutableStateOf("") }
     var useWeb      by remember { mutableStateOf(false) }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet(
-                modifier = Modifier.width(300.dp),
-                drawerContainerColor = MaterialTheme.colorScheme.surface,
-                drawerShape = RectangleShape
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // ChatGPT style Top Bar
+        Row(
+            Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Spacer(Modifier.weight(1f))
+            // Model Selector Pill
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
-                // ChatGPT style sidebar header
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedTextField(
-                        value = "", onValueChange = {},
-                        placeholder = { Text("Search", fontSize = 14.sp) },
-                        leadingIcon = { Icon(Icons.Default.Search, null, Modifier.size(18.dp)) },
-                        modifier = Modifier.weight(1f).height(48.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedBorderColor = Color.Transparent,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.onSurface.copy(0.05f),
-                            focusedContainerColor = MaterialTheme.colorScheme.onSurface.copy(0.1f)
-                        )
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    IconButton(onClick = {
-                        vm.newSession()
-                        scope.launch { drawerState.close() }
-                    }, modifier = Modifier.size(48.dp).background(MaterialTheme.colorScheme.onSurface.copy(0.05f), CircleShape)) {
-                        Icon(Icons.Default.Edit, "New chat", Modifier.size(20.dp))
-                    }
-                }
-                
-                Text("Recent", Modifier.padding(horizontal = 16.dp, vertical = 8.dp), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface.copy(0.5f))
+                Text(currentSession?.model?.substringAfterLast("/")?.take(15) ?: "Odysseus AI", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Icon(Icons.Default.KeyboardArrowDown, null, Modifier.size(20.dp))
+            }
+            Spacer(Modifier.weight(1f))
+            IconButton(onClick = { vm.newSession() }) {
+                Icon(Icons.Default.Edit, "New Chat")
+            }
+        }
 
-                if (loading && sessions.isEmpty()) {
-                    Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
+        // Error banner
+        error?.let {
+            Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.errorContainer).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(it, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onErrorContainer)
+                IconButton(onClick = { vm.clearError() }, Modifier.size(24.dp)) { Icon(Icons.Default.Close, null, Modifier.size(14.dp)) }
+            }
+        }
+
+        // Messages
+        val listState = rememberLazyListState()
+        LaunchedEffect(messages.size) {
+            if (messages.isNotEmpty()) listState.animateScrollToItem(messages.size - 1)
+        }
+
+        if (messages.isEmpty()) {
+            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(Modifier.size(64.dp).background(MaterialTheme.colorScheme.onSurface.copy(0.1f), CircleShape), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.AutoAwesome, null, Modifier.size(32.dp))
                     }
-                } else {
-                    LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 12.dp)) {
-                        items(sessions, key = { it.id }) { session ->
-                            val selected = currentSession?.id == session.id
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (selected) MaterialTheme.colorScheme.onSurface.copy(0.08f) else Color.Transparent)
-                                    .clickable { 
-                                        vm.selectSession(session)
-                                        scope.launch { drawerState.close() }
-                                    }
-                                    .padding(horizontal = 12.dp, vertical = 14.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(session.name.ifBlank { "New chat" }, maxLines = 1, fontSize = 14.sp, fontWeight = if(selected) FontWeight.SemiBold else FontWeight.Normal, modifier = Modifier.weight(1f))
+                    Spacer(Modifier.height(16.dp))
+                    Text("How can I help you today?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                }
+            }
+        } else {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                items(messages) { msg ->
+                    ChatGPTStyleBubble(msg)
+                }
+                if (sending) {
+                    item {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(28.dp).clip(CircleShape).border(1.dp, MaterialTheme.colorScheme.outline.copy(0.2f), CircleShape), contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.AutoAwesome, null, Modifier.size(16.dp))
                             }
+                            Spacer(Modifier.width(12.dp))
+                            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                         }
                     }
                 }
             }
         }
-    ) {
-        Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-            // ChatGPT style Top Bar
+
+        // ChatGPT Style Input Bar
+        Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(
-                Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 4.dp),
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.onSurface.copy(0.08f))
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                    Icon(Icons.Default.Menu, null)
-                }
-                Spacer(Modifier.weight(1f))
-                
-                // Model Selector Pill
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable {}.padding(horizontal = 12.dp, vertical = 8.dp)
-                ) {
-                    Text(currentSession?.model?.substringAfterLast("/")?.take(15) ?: "Odysseus AI", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    Icon(Icons.Default.KeyboardArrowDown, null, Modifier.size(20.dp))
+                IconButton(onClick = { useWeb = !useWeb }, Modifier.size(36.dp)) {
+                    Icon(if(useWeb) Icons.Default.Language else Icons.Default.Add, null, 
+                        tint = if (useWeb) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 }
                 
-                Spacer(Modifier.weight(1f))
-                IconButton(onClick = { vm.newSession() }) {
-                    Icon(Icons.Default.Edit, "New Chat")
-                }
-            }
-
-            // Error banner
-            error?.let {
-                Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.errorContainer).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(it, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onErrorContainer)
-                    IconButton(onClick = { vm.clearError() }, Modifier.size(24.dp)) { Icon(Icons.Default.Close, null, Modifier.size(14.dp)) }
-                }
-            }
-
-            // Messages
-            val listState = rememberLazyListState()
-            LaunchedEffect(messages.size) {
-                if (messages.isNotEmpty()) listState.animateScrollToItem(messages.size - 1)
-            }
-
-            if (messages.isEmpty()) {
-                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(Modifier.size(64.dp).background(MaterialTheme.colorScheme.onSurface.copy(0.1f), CircleShape), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.AutoAwesome, null, Modifier.size(32.dp))
-                        }
-                        Spacer(Modifier.height(16.dp))
-                        Text("How can I help you today?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    }
-                }
-            } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
-                ) {
-                    items(messages) { msg ->
-                        ChatGPTStyleBubble(msg)
-                    }
-                    if (sending) {
-                        item {
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.CenterVertically) {
-                                Box(Modifier.size(28.dp).clip(CircleShape).border(1.dp, MaterialTheme.colorScheme.outline.copy(0.2f), CircleShape), contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Default.AutoAwesome, null, Modifier.size(16.dp))
-                                }
-                                Spacer(Modifier.width(12.dp))
-                                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                BasicTextField(
+                    value = inputText,
+                    onValueChange = { inputText = it },
+                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+                    maxLines = 5,
+                    decorationBox = { innerTextField ->
+                        Box(contentAlignment = Alignment.CenterStart) {
+                            if (inputText.isEmpty()) {
+                                Text("Message Odysseus...", color = MaterialTheme.colorScheme.onSurface.copy(0.4f))
                             }
+                            innerTextField()
                         }
                     }
-                }
-            }
-
-            // ChatGPT Style Input Bar
-            Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(MaterialTheme.colorScheme.onSurface.copy(0.08f))
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = { useWeb = !useWeb }, Modifier.size(36.dp)) {
-                        Icon(if(useWeb) Icons.Default.Language else Icons.Default.Add, null, 
-                            tint = if (useWeb) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                )
+                
+                if (sending) {
+                    IconButton(
+                        onClick = { vm.stopGeneration() },
+                        modifier = Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.onSurface)
+                    ) {
+                        Icon(Icons.Default.Stop, "Stop", tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(18.dp))
                     }
-                    
-                    BasicTextField(
-                        value = inputText,
-                        onValueChange = { inputText = it },
-                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
-                        maxLines = 5,
-                        decorationBox = { innerTextField ->
-                            Box(contentAlignment = Alignment.CenterStart) {
-                                if (inputText.isEmpty()) {
-                                    Text("Message Odysseus...", color = MaterialTheme.colorScheme.onSurface.copy(0.4f))
-                                }
-                                innerTextField()
-                            }
-                        }
-                    )
-                    
-                    if (sending) {
-                        IconButton(
-                            onClick = { vm.stopGeneration() },
-                            modifier = Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.onSurface)
-                        ) {
-                            Icon(Icons.Default.Stop, "Stop", tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(18.dp))
-                        }
-                    } else {
-                        IconButton(
-                            onClick = {
-                                val t = inputText.trim()
-                                if (t.isNotBlank()) { vm.sendMessage(t, useWeb); inputText = "" }
-                            },
-                            modifier = Modifier.size(36.dp).clip(CircleShape).background(if (inputText.isBlank()) MaterialTheme.colorScheme.onSurface.copy(0.2f) else MaterialTheme.colorScheme.onSurface)
-                        ) {
-                            Icon(Icons.Default.ArrowUpward, "Send", tint = if(inputText.isBlank()) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surface, modifier = Modifier.size(18.dp))
-                        }
+                } else {
+                    IconButton(
+                        onClick = {
+                            val t = inputText.trim()
+                            if (t.isNotBlank()) { vm.sendMessage(t, useWeb); inputText = "" }
+                        },
+                        modifier = Modifier.size(36.dp).clip(CircleShape).background(if (inputText.isBlank()) MaterialTheme.colorScheme.onSurface.copy(0.2f) else MaterialTheme.colorScheme.onSurface)
+                    ) {
+                        Icon(Icons.Default.ArrowUpward, "Send", tint = if(inputText.isBlank()) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surface, modifier = Modifier.size(18.dp))
                     }
                 }
             }
