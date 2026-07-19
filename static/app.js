@@ -25,6 +25,7 @@ import galleryModule from './js/gallery.js';
 import tasksModule from './js/tasks.js?v=20260630tasksactivity';
 import calendarModule from './js/calendar.js';
 import notesModule from './js/notes.js';
+import terminalModule from './js/terminal.js';
 import adminModule from './js/admin.js';
 import settingsModule from './js/settings.js';
 // Eagerly bind unified minimize/restore behavior across all tool modals.
@@ -1098,6 +1099,14 @@ function initializeEventListeners() {
   if (notesModule && notesModule.refreshDueBadge) {
     notesModule.refreshDueBadge();
     setInterval(() => notesModule.refreshDueBadge(), 5 * 60 * 1000);
+  }
+
+  // Terminal tool button
+  const toolTerminalBtn = el('tool-terminal-btn');
+  if (toolTerminalBtn) {
+    toolTerminalBtn.addEventListener('click', () => {
+      if (terminalModule) terminalModule.togglePanel();
+    });
   }
 
   // URL-based panel routing — bookmark /calendar, /notes, /cookbook etc

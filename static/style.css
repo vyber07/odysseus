@@ -40451,3 +40451,68 @@ body.theme-frosted .modal {
   .compare-grid[data-cols] { grid-template-columns: 1fr !important; overflow-y: auto; }
   .compare-pane { min-height: 60dvh; }
 }
+
+/* ── Terminal panel ──────────────────────────────────────────────────────── */
+.terminal-pane {
+  display: flex;
+  flex-direction: column;
+}
+.terminal-output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 14px;
+  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', 'Menlo', monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  background: var(--code-bg, #1a1a1a);
+  color: var(--code-fg, #e0e0e0);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.terminal-line { margin: 0; padding: 1px 0; }
+.terminal-line-cmd    { color: var(--accent-primary, #4a9eff); font-weight: 600; }
+.terminal-line-stdout { color: var(--code-fg, #e0e0e0); }
+.terminal-line-stderr { color: var(--accent-error, #ff6b6b); }
+.terminal-line-system { color: #888; font-style: italic; }
+.terminal-input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--border, rgba(255,255,255,0.08));
+  background: var(--panel, var(--bg));
+  flex-shrink: 0;
+}
+.terminal-prompt {
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  color: var(--accent-primary, #4a9eff);
+  flex-shrink: 0;
+  user-select: none;
+}
+.terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  color: var(--fg);
+  caret-color: var(--accent-primary, #4a9eff);
+  min-width: 0;
+}
+.terminal-run-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--accent-primary, #4a9eff);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.terminal-run-btn:hover { opacity: 0.75; }
+/* Toast offset when terminal is docked right */
+body:has(#terminal-pane.modal-right-docked) .toast { right: calc(min(520px,95vw) + 12px) !important; }

@@ -528,7 +528,9 @@ async def _direct_fallback(
         "TERM": "xterm-256color",
         "COLUMNS": "120",
         "LINES": "40",
-        "HOME": _AGENT_WORKDIR,
+        # Use the real process HOME (container root = /root) so ~ expands
+        # correctly and tools like git/pip/ssh find their config files.
+        # _AGENT_WORKDIR is the cwd for subprocesses, not HOME.
     }
 
     try:

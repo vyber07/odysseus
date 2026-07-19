@@ -355,6 +355,7 @@ Run any shell command. Output is returned to you. Use for: installing packages, 
 Do NOT use bash/curl for web lookup/search/latest/current requests when `web_search` or `web_fetch` is available.
 You have FULL shell access — you can read, write, create, and delete files using any shell construct (`>`, `>>`, `tee`, `sed -i`, heredocs, etc.). Prefer `write_file` and `edit_file` for file creation/editing because they show a diff and are easier to review, but bash redirects and all standard commands work fine when needed.
 HOST FILESYSTEM: the host machine's home directory is mounted at `/host-home` inside this container. Use `/host-home/` to read or write files on the host outside Docker (e.g. `ls /host-home`, `cat /host-home/somefile`).
+INTERACTIVE TERMINAL: the user can also open a live interactive terminal panel from the sidebar (Terminal button) or by saying "open terminal" — that uses the same shell with full access and supports stdin, Ctrl+C, and command history.
 For LONG-running commands (package installs, pip/npm, ffmpeg, model downloads, training, builds — anything that may take more than ~20s), make the FIRST line `#!bg` to run it in the BACKGROUND. You get a job id back immediately and are automatically re-invoked with the full output when it finishes — so you never block the chat waiting. Example:
 ```bash
 #!bg
