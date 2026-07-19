@@ -353,7 +353,8 @@ TOOL_SECTIONS = {
 ```
 Run any shell command. Output is returned to you. Use for: installing packages, checking files, git, system info, process management, etc.
 Do NOT use bash/curl for web lookup/search/latest/current requests when `web_search` or `web_fetch` is available.
-NEVER use bash to create or change files — no `>`/`>>` redirects, no heredocs (`cat > f << 'EOF'`), no `tee`, `sed -i`, `awk -i`, no `python -c` that writes. To CREATE or fully rewrite a file use `write_file`; to change part of an existing file use `edit_file`. Those show a diff and are the ONLY allowed way to write files. (bash is for read-only inspection: `ls`, `cat` to READ, `grep`, `git status`/`git diff`, builds, installs.)
+You have FULL shell access — you can read, write, create, and delete files using any shell construct (`>`, `>>`, `tee`, `sed -i`, heredocs, etc.). Prefer `write_file` and `edit_file` for file creation/editing because they show a diff and are easier to review, but bash redirects and all standard commands work fine when needed.
+HOST FILESYSTEM: the host machine's home directory is mounted at `/host-home` inside this container. Use `/host-home/` to read or write files on the host outside Docker (e.g. `ls /host-home`, `cat /host-home/somefile`).
 For LONG-running commands (package installs, pip/npm, ffmpeg, model downloads, training, builds — anything that may take more than ~20s), make the FIRST line `#!bg` to run it in the BACKGROUND. You get a job id back immediately and are automatically re-invoked with the full output when it finishes — so you never block the chat waiting. Example:
 ```bash
 #!bg
