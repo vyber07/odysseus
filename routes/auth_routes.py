@@ -175,39 +175,18 @@ def setup_auth_routes(auth_manager: AuthManager) -> APIRouter:
 
     @router.get("/status")
     async def auth_status(request: Request):
+        from src.auth_helpers import effective_user as _effective_user
         cookie_token = request.cookies.get(SESSION_COOKIE)
         result = auth_manager.status(cookie_token)
         if not result.get("authenticated"):
-            auth_header = request.headers.get("authorization", "")
-            if auth_header.startswith("Bearer ody_"):
-                raw_token = auth_header[7:]
-                prefix = raw_token[:8]
-                try:
-                    import bcrypt
-                    from core.database import SessionLocal, ApiToken
-                    import sys
-                    print(f"DEBUG: auth_header={auth_header[:20]}...", file=sys.stderr)
-                    db = SessionLocal()
-                    try:
-                        tokens = db.query(ApiToken).filter(ApiToken.token_prefix == prefix, ApiToken.is_active == True).all()
-                        print(f"DEBUG: Found {len(tokens)} tokens for prefix {prefix}", file=sys.stderr)
-                        for t in tokens:
-                            if bcrypt.checkpw(raw_token.encode(), t.token_hash.encode()):
-                                result = {
-                                    "authenticated": True,
-                                    "username": t.owner,
-                                    "configured": True,
-                                    "is_admin": auth_manager.is_admin(t.owner)
-                                }
-                                print(f"DEBUG: bcrypt check passed! owner={t.owner}", file=sys.stderr)
-                                break
-                            else:
-                                print(f"DEBUG: bcrypt check failed!", file=sys.stderr)
-                    finally:
-                        db.close()
-                except Exception as e:
-                    import logging
-                    logging.error(f"Bearer status error: {e}")
+            bearer_user = _effective_user(request)
+            if bearer_user:
+                result = {
+                    "authenticated": True,
+                    "username": bearer_user,
+                    "configured": True,
+                    "is_admin": auth_manager.is_admin(bearer_user)
+                }
         result["signup_enabled"] = auth_manager.signup_enabled
         # Include the caller's effective privileges so the frontend can
         # hide / dim UI controls the user isn't allowed to use. Admins get
